@@ -76,9 +76,10 @@ What is Ansible?
 - In serverless, you put the instructions in, and it does everything on its own 
 >>>>>>> 54d9abb2a6dfdb66917c2737df7169c21011031a
 
-Setting up Ansible COntroller
+Setting up Ansible Controller
+
 - get upgrade
-- -get update
+- get update
 - install dependencies
 - install ansible
 - tree
