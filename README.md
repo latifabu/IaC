@@ -76,3 +76,13 @@ Aws has special services, management, can go serverless, like automated driving.
 In serverless, you put the instructions in, and it does everything on its own 
 >>>>>>> 54d9abb2a6dfdb66917c2737df7169c21011031a
 
+Setting up Ansible COntroller
+- get upgrade
+- -get update
+- install dependencies
+- install ansible
+- tree
+- set up agent nodes
+- default folder strcutures/ etc/ ansible
+- hosts file - agent node called web ip of the web.
+- 
