@@ -63,3 +63,13 @@
 # IaC
 ![ansible](https://user-images.githubusercontent.com/98215575/154273691-b2b7853f-2609-4caf-9853-c7ac3a92bbbb.png)
 
+We need a different infrastructure. So we use infrastructure as code, can launch to many machines not just one conf like provision.db
+Any file that has an extension of YAML/YML – YET ANOTHER MARKUP LANGUAGE 
+YAML/YML can be used on multiple platforms : can be used on aws, etc
+YAML/TML is useful because it is reusable thus saving us time
+What is Ansible?
+An automation code: a configuration management tool, we can config everything regardless of where the machine is, on prem, hybrid, public or multi-cloud
+It can talk to all machines if the description is right, can connect to 100s of servers with one file and do different tasks.
+Aws has special services, management, can go serverless, like automated driving. Like a car without a driver a serverless services can run by itself. 
+In serverless, you put the instructions in, and it does everything on its own 
+
