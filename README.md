@@ -74,7 +74,6 @@ What is Ansible?
 - It can talk to all machines if the description is right, can connect to 100s of servers with one file and do different tasks.
 - Aws has special services, management, can go serverless, like automated driving. Like a car without a driver a serverless services can run by itself. 
 - In serverless, you put the instructions in, and it does everything on its own 
->>>>>>> 54d9abb2a6dfdb66917c2737df7169c21011031a
 
 Setting up Ansible Controller
 
