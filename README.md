@@ -61,3 +61,5 @@
  end
 ```
 # IaC
+![ansible](https://user-images.githubusercontent.com/98215575/154273691-b2b7853f-2609-4caf-9853-c7ac3a92bbbb.png)
+
