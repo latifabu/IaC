@@ -61,7 +61,9 @@
  end
 ```
 # IaC
-![Ansible diagram](https://user-images.githubusercontent.com/98215575/154822757-7241e846-742e-49f6-9875-8d7a52edac92.png)
+
+![Ansible diagram](https://user-images.githubusercontent.com/98215575/154823142-7e8d8d77-1657-43a2-9e73-13b2e48dec26.png)
+
 
 
 
