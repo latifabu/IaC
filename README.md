@@ -137,6 +137,86 @@ Step 3) Accessing the other VMS through controller only
   echo -e "[web] \n192.168.56.10 ansible_connection=ssh ansible_ssh_user=vagrant ansible_ssh_pass=vagrant \n[db] \n192.168.56.11 ansible_connection=ssh ansible_ssh_user=vagrant ansible_ssh_pass=vagrant \n\n" | sudo tee --append /etc/ansible/hosts
   ```
 - Enter `sudo ansible web -m ping` and `sudo ansible db -m ping` 
+- Or `sudo ansible all -m ping` 
 - Create `README.md`
 - Enter `ansible web -m ansible.builtin.copy -a "src=/etc/ansible/README.md dest=/home/vagrant/README.md"`
 - 
+- Executing command in all instances ansible all -a "SOME COMMAND"
+  
+Ad hoc commands for ansible
+They allow us to interact with all agents from controller.
+
+Useful commands:
+
+```
+sudo ansible all/web/db -m ping
+sudo ansible all/web/db -a "uname -a"
+sudo ansible db -a "ls-a"
+sudo ansible web -a "free" # view memory
+ansible all -m copy -a "src=/etc/ansible/README.md dest=/home/vagrant/README.md" # copy files from one location to another
+```
+Ansible playbooks
+
+What are ansible playbooks?
+YAML/yml files with script to implment config managment
+WHy use them?
+Save time and they are re usable
+- not many changes are needed when using a playbook
+- if we use the playbook on the cloud instead of local host all we need to do is change the ip
+- how to create a playbook <file>.yml/yaml
+- Interprester knows the YAML/yml `---`
+- IN python we use import pytest
+- In ansilbe we can import file.yml
+
+Ansible playbooks
+Install nginx on web using this playbook:
+
+```
+# YAML/YML file to create a playbook to configure nginx in our web instance
+
+---
+# Starts with three dashes
+
+# add the name of the host/instance/VM
+- hosts: web
+
+# collect logs or gather facts -
+  gather_facts: yes
+
+# need admin access to install anything
+  become: true
+
+# add the instructions - install nginx - in web server
+  tasks:
+  - name: Installing Nginx web-sever in our app machine
+    apt: pkg=nginx state=present
+
+
+# HINT: be mindful of indentation
+# use 2 spaces - avoid using tab
+```
+Install nodejs using this playbook
+```
+#Yml file to create a playbook to set up nodejs
+---
+- hosts: web
+
+  gather_facts: yes
+
+  become: true
+
+  tasks:
+  - name: load a specific version of nodejs
+    shell: curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+
+  - name: install the required packages
+    apt:
+      pkg:
+        - nginx
+        - nodejs
+        - npm
+      update_cache: yes
+  - name: install and run the app
+    shell:
+       cd app/app; npm install; screen -d -m npm start
+```
