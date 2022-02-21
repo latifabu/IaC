@@ -474,6 +474,7 @@ By running the above playbooks from our controller VM we can send multiple comma
 - Check if the right versions of the above dependencies have been installed with: `aws --version`'
 - `cd /etc/ansible`
 - Folder structure for vault:
+ 
 - `/etc/ansible/group_vars/all/file.yml` group and all folders are not created yet.
 - Use `sudo mkdir group_vars` to create `group_vars` folder
 - sudo `mkdir all`
@@ -488,7 +489,8 @@ aws_secret_key: YOURSECRETKEY
 - Type `ii` to insert and then edit file
 - To save press `esc` and type `:wq!`
 - File structure should be the follwing:
-  
+  ![tree structure ansible](https://user-images.githubusercontent.com/98215575/155037587-e54be4b7-a93b-4852-b3c7-78b0d839e6f9.png)
+ 
 - To not save type :q!
 - `sudo cat <file>.yml` print an encrypted key
 - `sudo chmod 600 pass.yml` give the file permission to be read
