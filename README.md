@@ -472,6 +472,10 @@ By running the above playbooks from our controller VM we can send multiple comma
 - Install boto3 `pip3 install boto boto3`
 - Run update and upgrade commands to check if anything does need to be updated.
 - Check if the right versions of the above dependencies have been installed with: `aws --version`'
+ If the following appears, open a new git bash terminal as admin:
+ 
+ ![image](https://user-images.githubusercontent.com/98215575/155037923-694d1655-6c4d-488b-bc8f-be95c8300738.png)
+
 - `cd /etc/ansible`
 - Folder structure for vault:
  
