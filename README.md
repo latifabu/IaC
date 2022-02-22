@@ -604,3 +604,98 @@ sudo ansible-playbook ec2.yml --ask-vault-pass --tags create_ec2 --tags=ec2-crea
 ```
 - Enter: `sudo ansible-playbook install_nginx.yml --ask-vault-pass`
 - Nginx will be running on aws instance.
+
+## Ansible on AWS
+- Create an Ec2 Instance using our `web` VM
+Run the following:
+- sudo apt-get update -y && sudo apt-get upgrade -y
+- sudo apt-get install tree
+- sudo apt-add-repository --yes --update ppa:ansible/ansible
+- sudo apt-get install ansible -y
+- sudo apt-get install python3-pip
+- pip3 install awscli
+- pip3 install boto boto3
+- check everything is installed correctly use aws --version
+- Then create the following folder structure for vault:
+  - `/etc/ansible/group_vars/all/file.yml` group and all folders are not created yet.
+  - Use `sudo mkdir group_vars` to create `group_vars` folder
+  - sudo `mkdir all`
+  - Inside `all` folder create this file
+  - `sudo ansible-vault create pass.yml`
+  Enter:
+  ```
+  aws_access_key: ACCESSKEY
+  aws_secret_key: SECRETKEY
+  ```
+- sudo chmod 600 pass.yml
+- `cd ~/.ssh`
+- Create key pair with: `ssh-keygen -t rsa -b 4096`
+- Then `cd/etc/ansible` 
+- create a a playbook called: `ec2_app.yml`
+In the playbook enter:
+
+```---
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  vars_files:
+  - /etc/ansible/group_vars/all/pass.yml
+  tasks:
+  - ec2_key:
+      name: eng103a-<my_name>
+      key_material: "{{ lookup('file', '/home/vagrant/.ssh/id_rsa.pub') }}"
+      region: "eu-west-1"
+      aws_access_key: "{{aws_access_key}}"
+      aws_secret_key: "{{aws_secret_key}}"
+  - ec2:
+      aws_access_key: "{{aws_access_key}}"
+      aws_secret_key: "{{aws_secret_key}}"
+      key_name: eng103a
+      instance_type: t2.micro
+      image: ami-07d8796a2b0f8d29c
+      wait: yes
+      group: default
+      region: "eu-west-1"
+      count: 1
+      vpc_subnet_id: <subnet_id>
+      assign_public_ip: yes
+      instance_tags:
+        Name: LatifPlayBook
+
+```
+- Launch instance with: 
+`sudo ansible-playbook ec2.yml --ask-vault-pass --tags create_ec2 --tags=ec2-create -e "ansible_python_interpreter=/usr/bin/python3"`
+
+Copy app and install app dependcies with this playbook:
+
+```
+---
+- hosts: app
+  gather_facts: yes
+  become: yes
+  tasks:
+  -  name: syncing app folder
+     synchronize:
+       src: /home/ubuntu/app
+       dest: ~/
+  -  name: load a specific version of nodejs
+     shell: curl -sl https://deb.nodesource.com/setup_6.x | sudo -E bash -
+  -  name: install the required packages
+     apt:
+       pkg:
+         - nginx
+         - nodejs
+         - npm
+       update_cache: yes
+  -  name: nginx configuration for reverse proxy
+     synchronize:
+       src: /home/ubuntu/app/default
+       dest: /etc/nginx/sites-available/default
+  -  name: nginx restart
+     service: name=nginx state=restarted
+  -  name: nginx enable
+     service: name=nginx enabled=yes
+  -  name: setting db variable
+     lineinfile: dest=/home/ubuntu/.bashrc line='export DB_HOST=mongodb://10.0.2.190:27017/posts'
+
+```
