@@ -349,6 +349,7 @@ WHy use them?
     
   ```
 ### Install mongodb pre-requistes with
+- This is not needed because of the `setting_up_mongodb.yml`
 - `mongodb_pre_req.ywl`:
 ```
 ---
@@ -606,96 +607,139 @@ sudo ansible-playbook ec2.yml --ask-vault-pass --tags create_ec2 --tags=ec2-crea
 - Nginx will be running on aws instance.
 
 ## Ansible on AWS
-- Create an Ec2 Instance using our `web` VM
-Run the following:
-- sudo apt-get update -y && sudo apt-get upgrade -y
-- sudo apt-get install tree
-- sudo apt-add-repository --yes --update ppa:ansible/ansible
-- sudo apt-get install ansible -y
-- sudo apt-get install python3-pip
-- pip3 install awscli
-- pip3 install boto boto3
-- check everything is installed correctly use aws --version
+- Create an Ec2 Instance on AWS using ubuntu.
+- Use your VPC and use the puplic subnet you created.
+- Launch instance
+- Run the following
+- `sudo apt-get update -y && sudo apt-get upgrade -y`
+- `sudo apt-get install tree`
+- `sudo apt-add-repository --yes --update ppa:ansible/ansible`
+- `sudo apt-get install ansible -y`
+- `sudo apt-get install python3-pip`
+- `pip3 install awscli`
+- `pip3 install boto boto3`
+- check everything is installed correctly use `aws --version`. 
 - Then create the following folder structure for vault:
   - `/etc/ansible/group_vars/all/file.yml` group and all folders are not created yet.
   - Use `sudo mkdir group_vars` to create `group_vars` folder
   - sudo `mkdir all`
   - Inside `all` folder create this file
   - `sudo ansible-vault create pass.yml`
-  Enter:
+
+Enter:
   ```
   aws_access_key: ACCESSKEY
   aws_secret_key: SECRETKEY
   ```
 - sudo chmod 600 pass.yml
+- `cd` out
 - `cd ~/.ssh`
 - Create key pair with: `ssh-keygen -t rsa -b 4096`
 - Then `cd/etc/ansible` 
 - create a a playbook called: `ec2_app.yml`
 In the playbook enter:
+- Within the playbook enter a security group that belongs to the same vpc that we selected above
+- Secuirty group should allow ssh in from port 22 and 80.
 
-```---
+```
+---
 - hosts: localhost
   connection: local
   gather_facts: yes
   vars_files:
   - /etc/ansible/group_vars/all/pass.yml
+  vars:
+    ec2_instance_name: eng103a-name-ansible-app
+    ec2_sg_name: eng103a_<name>_vpc_app # security group that allows ssh port from anywhere
+    ec2_pem_name: eng103a-<name>
   tasks:
   - ec2_key:
-      name: eng103a-<my_name>
-      key_material: "{{ lookup('file', '/home/vagrant/.ssh/id_rsa.pub') }}"
+      name: "{{ec2_pem_name}}"
+      key_material: "{{ lookup('file', '/home/ubuntu/.ssh/id_rsa.pub') }}"
       region: "eu-west-1"
       aws_access_key: "{{aws_access_key}}"
       aws_secret_key: "{{aws_secret_key}}"
   - ec2:
       aws_access_key: "{{aws_access_key}}"
       aws_secret_key: "{{aws_secret_key}}"
-      key_name: eng103a
+      key_name: "{{ec2_pem_name}}"
       instance_type: t2.micro
       image: ami-07d8796a2b0f8d29c
       wait: yes
-      group: default
+      group: "{{ec2_sg_name}}"
       region: "eu-west-1"
       count: 1
-      vpc_subnet_id: <subnet_id>
+      vpc_subnet_id: subnet-xxxxxxxxxx # public subnet
       assign_public_ip: yes
       instance_tags:
-        Name: LatifPlayBook
-
+        Name: "{{ec2_instance_name}}"
 ```
 - Launch instance with: 
-`sudo ansible-playbook ec2.yml --ask-vault-pass --tags create_ec2 --tags=ec2-create -e "ansible_python_interpreter=/usr/bin/python3"`
-
-Copy app and install app dependcies with this playbook:
-
+`sudo ansible-playbook ec2_app.yml --connection=local -e "ansible_python_interpreter=/usr/bin/python3" --ask-vault-pass"`
+- Add app ip to hosts file 
+- Copy app from local host to controller `scp -i "~/.ssh/<pem>" -r app ubuntu@controller_ip:~`
+```
+[app]
+xx.xx.xx.xx ssh_connection=ssh ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/.ssh/id_rsa
+```
+- Ping app with `sudo ansible app -m ping --ask-vault-pass`
+- If pong returns, run the playbooks that: 
+- `update and upgrade`
+- `copy_app_and_install_app_dependencies`
+- `reverse_proxy`
+- `create env var` 
+- `add env to bashrc file` 
+- `source bashrc`
+  
+Creating DB playbook:
+- Add security group from the same VPC
+- Allow ssh from all
 ```
 ---
-- hosts: app
+- hosts: localhost
+  connection: local
   gather_facts: yes
-  become: yes
+  vars_files:
+  - /etc/ansible/group_vars/all/pass.yml
+  vars:
+    ec2_instance_name: eng103a-<name>-ansible-db
+    ec2_sg_name: eng103a_<name>_vpc_db_sg
+    ec2_pem_name: eng103a-<name>
   tasks:
-  -  name: syncing app folder
-     synchronize:
-       src: /home/ubuntu/app
-       dest: ~/
-  -  name: load a specific version of nodejs
-     shell: curl -sl https://deb.nodesource.com/setup_6.x | sudo -E bash -
-  -  name: install the required packages
-     apt:
-       pkg:
-         - nginx
-         - nodejs
-         - npm
-       update_cache: yes
-  -  name: nginx configuration for reverse proxy
-     synchronize:
-       src: /home/ubuntu/app/default
-       dest: /etc/nginx/sites-available/default
-  -  name: nginx restart
-     service: name=nginx state=restarted
-  -  name: nginx enable
-     service: name=nginx enabled=yes
-  -  name: setting db variable
-     lineinfile: dest=/home/ubuntu/.bashrc line='export DB_HOST=mongodb://10.0.2.190:27017/posts'
-
+  - ec2_key:
+      name: "{{ec2_pem_name}}"
+      key_material: "{{ lookup('file', '/home/ubuntu/.ssh/id_rsa.pub') }}"
+      region: "eu-west-1"
+      aws_access_key: "{{aws_access_key}}"
+      aws_secret_key: "{{aws_secret_key}}"
+  - ec2:
+      aws_access_key: "{{aws_access_key}}"
+      aws_secret_key: "{{aws_secret_key}}"
+      key_name: "{{ec2_pem_name}}"
+      instance_type: t2.micro
+      image: ami-07d8796a2b0f8d29c
+      wait: yes
+      group: "{{ec2_sg_name}}"
+      region: "eu-west-1"
+      count: 1
+      vpc_subnet_id: subnet-xxxxxxxxxxxxxx
+      assign_public_ip: yes
+      instance_tags:
+        Name: "{{ec2_instance_name}}"
 ```
+After launching db instance
+- Add `db` to hosts file and use the private IP 
+- Ping using `db` private IP
+- Run playbooks for db that:
+- `update and upgrade`
+- `install_mongodv and pre_req`
+- `change_mongodb IP to 0.0.0.0`
+  
+Now start the app
+- `cd`
+- `cd ~/.ssh`
+- ssh into app, by copying ssh link from aws
+-  `cd app`
+-  then run `node seeds/seed.js`
+-  `npm start`
+- 
